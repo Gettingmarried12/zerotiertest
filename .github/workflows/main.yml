@@ -78,16 +78,20 @@ jobs:
           $ztIP = $null
           $retries = 0
 
+          # Retry up to 30 times (150 seconds)
           while (-not $ztIP -and $retries -lt 30) {
+              # Retrieve ZeroTier network information
               $output = & $ztCli listnetworks
 
+              # Check if "OK" exists in the output, and extract IP
               if ($output -match "OK") {
-                  # Extract IP using regex (more reliable)
+                  # Extract IP using regex (reliable format)
                   if ($output -match "(\d+\.\d+\.\d+\.\d+\/\d+)") {
                       $ztIP = $matches[1].Split("/")[0]
                   }
               }
 
+              # If no IP found, wait and retry
               if (-not $ztIP) {
                   Write-Host "Still waiting... (Make sure you authorize this device in ZeroTier Central)"
                   Start-Sleep -Seconds 5
@@ -95,6 +99,7 @@ jobs:
               }
           }
 
+          # Exit with error if no IP assigned after retries
           if (-not $ztIP) {
               Write-Error "ZeroTier IP not assigned. Did you authorize the device in ZeroTier Central?"
               exit 1
